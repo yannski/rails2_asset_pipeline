@@ -153,6 +153,44 @@ Rails2AssetPipeline.manifest = Rails.root.join("spec/fixtures/empty_manifest.jso
  - add `sass` to your gems for sass parsing
  - add `sprockets-sass` to your gems for sass @import support
 
+### Sprockets Helpers
+
+If you'd like to use sprocket helpers in your stylesheets, you have to add the sprockets-helpers gem and configure it in your initializer.
+
+    # Gemfile (if you have one)
+    gem "rails2_asset_pipeline"
+
+    group :development do
+      gem "coffee-script", :require => false # need coffee ?
+      gem "sass", :require => false # need sass ?
+      gem "sprockets-sass", :require => false
+      gem "sprockets-helpers", :require => false
+    end
+
+```Ruby
+# config/initializers/rails2_asset_pipeline.rb
+if Rails.env.development? # dynamic asset compilation needs these
+  require 'coffee-script' # need coffee ?
+  require 'sprockets/sass' # need sass ?
+  autoload :Sass, 'sass' # autoload when used via rake assets:precompile
+  # require 'sprockets/source_url' # sprockets-source_url for debugable assets in chrome
+end
+
+require 'sprockets-helpers'
+
+# Use a different path for assets (as in config.assets.prefix from ")
+# Rails2AssetPipeline.prefix = 'static_assets'
+
+Rails2AssetPipeline.setup do |sprockets|
+  # ... additional config ...
+  Sprockets::Helpers.configure do |config|
+    config.environment = sprockets
+    config.prefix = "/assets"
+    config.digest = Rails.env.production? || Rails.env.staging?
+  end
+end
+```
+
 # Todo
  - read config from Rails 3 style config.assets
  - sprockets 2.8 wants to use manifest-digest.json, had to overwrite that, find out if nonpstatic manifest makes sense for us and potentially have an option to turn it on
